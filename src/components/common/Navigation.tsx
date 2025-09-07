@@ -1,0 +1,109 @@
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { PlusCircle, Eye, BarChart3, Settings, Home } from "lucide-react";
+
+/**
+ * 네비게이션 아이템 인터페이스
+ */
+interface INavigationItem {
+  /** 아이템 라벨 */
+  label: string;
+  /** 아이템 경로 */
+  href: string;
+  /** 아이콘 컴포넌트 */
+  icon: React.ComponentType<{ className?: string }>;
+  /** 설명 */
+  description: string;
+}
+
+/**
+ * 네비게이션 아이템 목록
+ */
+const navigationItems: INavigationItem[] = [
+  {
+    label: "홈",
+    href: "/",
+    icon: Home,
+    description: "메인 페이지",
+  },
+  {
+    label: "입력",
+    href: "/input",
+    icon: PlusCircle,
+    description: "거래 내역 입력",
+  },
+  {
+    label: "보기",
+    href: "/view",
+    icon: Eye,
+    description: "거래 내역 조회",
+  },
+  {
+    label: "분석",
+    href: "/analysis",
+    icon: BarChart3,
+    description: "지출 분석",
+  },
+  {
+    label: "관리",
+    href: "/admin",
+    icon: Settings,
+    description: "설정 관리",
+  },
+];
+
+/**
+ * 하단 네비게이션 컴포넌트
+ *
+ * @returns 네비게이션 컴포넌트
+ */
+const Navigation: React.FC = () => {
+  const pathname = usePathname();
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+      <div className="max-w-md mx-auto">
+        <div className="flex justify-around items-center">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1",
+                  "hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-50",
+                  isActive
+                    ? "text-primary-50 bg-primary-50/10"
+                    : "text-gray-600 hover:text-gray-900"
+                )}
+                aria-label={item.description}
+              >
+                <Icon
+                  className={cn(
+                    "w-5 h-5 mb-1",
+                    isActive ? "text-primary-50" : "text-gray-500"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-xs font-medium truncate w-full text-center",
+                    isActive ? "text-primary-50" : "text-gray-600"
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navigation;
