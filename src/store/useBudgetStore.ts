@@ -259,13 +259,10 @@ export const useBudgetStore = create<IBudgetState>()(
       hydrate: () => {
         // 클라이언트에서만 실행
         if (typeof window !== "undefined") {
-          // 스토어의 hydration을 수동으로 트리거
-          useBudgetStore.persist.rehydrate();
-
           // selectedMonth가 비어있으면 현재 월로 설정
-          const currentState = useBudgetStore.getState();
+          const currentState = get();
           if (!currentState.selectedMonth) {
-            useBudgetStore.setState({
+            set({
               selectedMonth: formatYearMonth(new Date()),
             });
           }
@@ -386,7 +383,6 @@ export const useBudgetStore = create<IBudgetState>()(
         selectedUser: state.selectedUser,
         selectedMonth: state.selectedMonth,
       }),
-      skipHydration: true,
     }
   )
 );

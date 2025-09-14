@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import ClientOnly from "@/components/common/ClientOnly";
 import { useBudgetStore } from "@/store/useBudgetStore";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { ITransactionView } from "@/types/budget";
 import {
   TrendingUp,
   TrendingDown,
@@ -19,6 +20,57 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
+
+/**
+ * 오늘의 거래 컴포넌트 props
+ */
+interface ITodayTransactionsProps {
+  transactions: ITransactionView[];
+}
+
+/**
+ * 오늘의 거래 컴포넌트 (클라이언트에서만 렌더링)
+ */
+const TodayTransactions: React.FC<ITodayTransactionsProps> = ({
+  transactions,
+}) => {
+  const today = new Date();
+  const todayString = today.toDateString();
+  const todayTransactions = transactions.filter((transaction) => {
+    const transactionDate = new Date(transaction.date);
+    return transactionDate.toDateString() === todayString;
+  });
+
+  return todayTransactions.length > 0 ? (
+    <div className="space-y-3">
+      {todayTransactions.map((transaction) => (
+        <div key={transaction.id} className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="font-medium text-gray-900">
+              {transaction.description}
+            </p>
+            <p className="text-sm text-gray-500">
+              {transaction.category} • {transaction.card}
+            </p>
+          </div>
+          <span
+            className={`font-semibold ${
+              transaction.type === "income" ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {transaction.type === "income" ? "+" : "-"}
+            {formatCurrency(transaction.amount)}
+          </span>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-center py-4">
+      <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+      <p className="text-gray-500">오늘은 아직 거래 내역이 없습니다</p>
+    </div>
+  );
+};
 
 /**
  * 메인 홈 페이지 컴포넌트
@@ -36,8 +88,10 @@ const HomePage: React.FC = () => {
 
   // 컴포넌트 마운트 시 데이터 초기화 및 hydration 처리
   useEffect(() => {
-    hydrate();
-    initializeData();
+    if (typeof window !== "undefined") {
+      hydrate();
+      initializeData();
+    }
   }, [hydrate, initializeData]);
 
   const monthlySummary = selectedMonth ? getMonthlySummary() : null;
@@ -106,53 +160,7 @@ const HomePage: React.FC = () => {
               </div>
             }
           >
-            {(() => {
-              const today = new Date();
-              const todayString = today.toDateString();
-              const todayTransactions = currentTransactions.filter(
-                (transaction) => {
-                  const transactionDate = new Date(transaction.date);
-                  return transactionDate.toDateString() === todayString;
-                }
-              );
-
-              return todayTransactions.length > 0 ? (
-                <div className="space-y-3">
-                  {todayTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">
-                          {transaction.description}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {transaction.category} • {transaction.card}
-                        </p>
-                      </div>
-                      <span
-                        className={`font-semibold ${
-                          transaction.type === "income"
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {transaction.type === "income" ? "+" : "-"}
-                        {formatCurrency(transaction.amount)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">
-                    오늘은 아직 거래 내역이 없습니다
-                  </p>
-                </div>
-              );
-            })()}
+            <TodayTransactions transactions={currentTransactions} />
           </ClientOnly>
         </Card>
 
