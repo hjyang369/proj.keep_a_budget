@@ -35,6 +35,13 @@
 - 이번 달 계획 금액 입력
 - 카테고리별 예산 설정
 
+### 5. PWA 및 푸시 알림
+
+- **PWA 기능**: 앱처럼 설치 가능, 오프라인 지원
+- **푸시 알림**: 예산 초과, 지출 경고, 월별 요약 등
+- **알림 설정**: 사용자별 알림 타입 및 시간 설정
+- **FCM 연동**: Firebase Cloud Messaging을 통한 실시간 알림
+
 ## 🛠 기술 스택
 
 - **Frontend**: Next.js 15, React 19, TypeScript
@@ -42,6 +49,8 @@
 - **State Management**: Zustand
 - **Icons**: Lucide React
 - **Build Tool**: Next.js App Router
+- **PWA**: next-pwa
+- **Push Notifications**: Firebase Cloud Messaging (FCM)
 
 ## 📱 반응형 디자인
 
@@ -86,6 +95,41 @@ npm run build
 npm start
 ```
 
+## 📱 PWA 설치 및 사용법
+
+### 모바일에서 설치하기
+
+1. **Chrome/Edge (Android)**:
+
+   - 브라우저에서 앱 접속
+   - 주소창 옆의 "설치" 아이콘 클릭
+   - "설치" 버튼 확인
+
+2. **Safari (iOS)**:
+
+   - Safari에서 앱 접속
+   - 하단 공유 버튼 탭
+   - "홈 화면에 추가" 선택
+
+3. **데스크톱 (Chrome/Edge)**:
+   - 브라우저에서 앱 접속
+   - 주소창 오른쪽의 설치 아이콘 클릭
+   - "설치" 버튼 확인
+
+### 푸시 알림 설정
+
+1. 앱 첫 실행 시 알림 권한 요청 모달이 표시됩니다
+2. "알림 권한 허용하기" 버튼을 클릭하여 권한을 허용하세요
+3. 홈 화면의 "알림 설정" 버튼을 통해 세부 알림 설정을 관리할 수 있습니다
+
+### 알림 타입
+
+- **예산 알림**: 예산의 20% 이하가 남았을 때
+- **지출 경고**: 큰 금액 지출 시
+- **월별 요약**: 매월 가계부 요약
+- **카테고리 초과**: 카테고리 예산 초과 시
+- **거래 추가**: 새 거래 추가 시 (선택사항)
+
 ## 📁 프로젝트 구조
 
 ```
@@ -101,7 +145,8 @@ src/
 ├── components/            # React 컴포넌트
 │   ├── common/           # 공통 컴포넌트
 │   │   ├── Layout.tsx    # 레이아웃 컴포넌트
-│   │   └── Navigation.tsx # 네비게이션 컴포넌트
+│   │   ├── Navigation.tsx # 네비게이션 컴포넌트
+│   │   └── NotificationPermission.tsx # 알림 권한 컴포넌트
 │   ├── sections/         # 페이지별 섹션 컴포넌트
 │   └── ui/               # UI 컴포넌트
 │       ├── Button.tsx    # 버튼 컴포넌트
@@ -110,7 +155,11 @@ src/
 │       └── Card.tsx      # 카드 컴포넌트
 ├── lib/                  # 유틸리티 함수
 │   ├── utils.ts          # 공통 유틸 함수
-│   └── excel.ts          # 엑셀 연동 유틸
+│   ├── excel.ts          # 엑셀 연동 유틸
+│   ├── firebase.ts       # Firebase 설정
+│   └── notificationService.ts # 알림 서비스
+├── hooks/                # 커스텀 훅
+│   └── usePushNotification.ts # 푸시 알림 훅
 ├── store/                # 상태 관리
 │   └── useBudgetStore.ts # Zustand 스토어
 ├── types/                # TypeScript 타입 정의
@@ -137,6 +186,20 @@ src/
 - 가벼운 상태 관리
 - 로컬 스토리지 연동
 - 타입 안전한 스토어
+
+### PWA (Progressive Web App)
+
+- next-pwa를 통한 PWA 기능 구현
+- 오프라인 지원 및 캐싱 전략
+- 앱 설치 가능 (Add to Home Screen)
+- 서비스 워커를 통한 백그라운드 동기화
+
+### Firebase Cloud Messaging (FCM)
+
+- 실시간 푸시 알림 지원
+- 예산 초과, 지출 경고 등 스마트 알림
+- 사용자별 알림 설정 관리
+- 포그라운드/백그라운드 알림 처리
 
 ## 📊 데이터 구조
 
@@ -170,10 +233,12 @@ interface IAdminConfig {
 
 - [ ] Google Sheets API 연동
 - [ ] 차트 라이브러리 추가 (Recharts)
-- [ ] PWA 기능 추가
+- [x] PWA 기능 추가
 - [ ] 데이터 내보내기/가져오기
-- [ ] 알림 기능
+- [ ] 알림 기능 (FCM)
 - [ ] 다크 모드 지원
+- [ ] 오프라인 데이터 동기화
+- [ ] 백그라운드 동기화
 
 ## 📝 라이선스
 
