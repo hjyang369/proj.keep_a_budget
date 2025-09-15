@@ -17,7 +17,7 @@ export interface ITransactionInput {
   /** 거래 내용 */
   description: string;
   /** 거래 날짜 */
-  date: Date;
+  date: string | Date;
   /** 거래 금액 */
   amount: number;
   /** 결제수단 (성욱현금, 회진현금, 회진카카오체크 등) */

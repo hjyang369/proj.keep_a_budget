@@ -29,7 +29,7 @@ const InputPage: React.FC = () => {
   const [formData, setFormData] = useState<ITransactionInput>({
     type: "expense",
     description: "",
-    date: new Date(), // Date 객체
+    date: new Date().toISOString().split("T")[0],
     amount: 0,
     card: "",
     category: "",
@@ -100,19 +100,20 @@ const InputPage: React.FC = () => {
     setSubmitStatus("idle");
 
     try {
+      const now = new Date();
       const transactionData: ITransactionInput = {
         ...formData,
-        date: new Date(formData.date),
+        date: `${now.getFullYear()}. ${now.getMonth() + 1}. ${now.getDate()}`,
         amount: Number(formData.amount),
       };
 
-      await addTransaction(transactionData);
+      await onAppend(transactionData);
 
       // 폼 초기화
       setFormData({
         type: "expense",
         description: "",
-        date: new Date(),
+        date: new Date().toISOString().split("T")[0],
         amount: 0,
         card: "",
         category: "",
@@ -143,6 +144,36 @@ const InputPage: React.FC = () => {
       const newErrors = { ...errors };
       delete newErrors[field];
       setErrors(newErrors);
+    }
+  };
+
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("test");
+
+  const onAppend = async (values: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/sheets/append", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          values: [
+            values.type,
+            values.category,
+            values.amount,
+            values.date,
+            values.description,
+            values.card,
+          ],
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "failed");
+      setMsg("추가 성공!");
+    } catch (err: any) {
+      setMsg(`에러: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
