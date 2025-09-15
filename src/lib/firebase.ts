@@ -31,6 +31,7 @@ let messaging: any = null;
 
 if (
   typeof window !== "undefined" &&
+  typeof window.navigator !== "undefined" &&
   "serviceWorker" in navigator &&
   isValidConfig
 ) {

@@ -29,7 +29,7 @@ const InputPage: React.FC = () => {
   const [formData, setFormData] = useState<ITransactionInput>({
     type: "expense",
     description: "",
-    date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
+    date: new Date(), // Date 객체
     amount: 0,
     card: "",
     category: "",
@@ -112,7 +112,7 @@ const InputPage: React.FC = () => {
       setFormData({
         type: "expense",
         description: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date(),
         amount: 0,
         card: "",
         category: "",
@@ -131,7 +131,7 @@ const InputPage: React.FC = () => {
   // 입력값 변경 핸들러
   const handleInputChange = (
     field: keyof ITransactionInput,
-    value: string | number
+    value: string | number | Date
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -140,10 +140,9 @@ const InputPage: React.FC = () => {
 
     // 에러 상태 초기화
     if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: undefined,
-      }));
+      const newErrors = { ...errors };
+      delete newErrors[field];
+      setErrors(newErrors);
     }
   };
 
@@ -180,8 +179,12 @@ const InputPage: React.FC = () => {
             <Input
               label="날짜"
               type="date"
-              value={formData.date}
-              onChange={(value) => handleInputChange("date", value)}
+              value={
+                formData.date instanceof Date
+                  ? formData.date.toISOString().split("T")[0]
+                  : formData.date
+              }
+              onChange={(value) => handleInputChange("date", new Date(value))}
               required
               error={errors.date}
             />
