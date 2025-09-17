@@ -65,6 +65,30 @@ const AdminPage: React.FC = () => {
     setLocalConfig(adminConfig);
   }, [adminConfig]);
 
+  const [paymentMethodList, setPaymentMethodList] = useState<string[]>([]);
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+
+  const getPaymentMethodList = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get?sheetName=설정&range=A:A`)
+    );
+    const json = await res.json();
+    setPaymentMethodList(json.values.slice(1));
+  };
+
+  const getCategoryList = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get?sheetName=설정&range=D:D`)
+    );
+    const json = await res.json();
+    setCategoryList(json.values.slice(1));
+  };
+
+  useEffect(() => {
+    getPaymentMethodList();
+    getCategoryList();
+  }, []);
+
   // 결제수단 추가
   const handleAddCard = () => {
     if (newCard.trim() && !localConfig.cards.includes(newCard.trim())) {
@@ -210,7 +234,7 @@ const AdminPage: React.FC = () => {
 
           {/* 결제수단 목록 */}
           <div className="space-y-2">
-            {localConfig.cards.map((card) => (
+            {paymentMethodList.map((card) => (
               <div
                 key={card}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -254,7 +278,7 @@ const AdminPage: React.FC = () => {
 
           {/* 카테고리 목록 */}
           <div className="space-y-2">
-            {localConfig.categories.map((category) => (
+            {categoryList.map((category) => (
               <div
                 key={category}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
