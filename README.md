@@ -201,34 +201,6 @@ src/
 - 사용자별 알림 설정 관리
 - 포그라운드/백그라운드 알림 처리
 
-## 📊 데이터 구조
-
-### 거래 내역 (Transaction)
-
-```typescript
-interface ITransactionView {
-  id: string;
-  type: "income" | "expense";
-  description: string;
-  date: Date;
-  amount: number;
-  card: string;
-  category: string;
-  owner: "성욱" | "회진";
-}
-```
-
-### 관리 설정 (AdminConfig)
-
-```typescript
-interface IAdminConfig {
-  cards: string[];
-  categories: string[];
-  monthlyBudget: number;
-  categoryBudgets: Record<string, number>;
-}
-```
-
 ## 🎯 향후 계획
 
 - [ ] Google Sheets API 연동

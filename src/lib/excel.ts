@@ -207,7 +207,7 @@ export function initializeSheetData(): void {
   const sampleTransactions: ITransactionView[] = [
     {
       id: generateId(),
-      type: "expense",
+      type: "지출",
       description: "점심 식사",
       date: new Date("2025-09-07"),
       amount: 15000,
@@ -217,7 +217,7 @@ export function initializeSheetData(): void {
     },
     {
       id: generateId(),
-      type: "expense",
+      type: "지출",
       description: "헬스장 회비",
       date: new Date("2025-09-06"),
       amount: 50000,
@@ -227,7 +227,7 @@ export function initializeSheetData(): void {
     },
     {
       id: generateId(),
-      type: "income",
+      type: "입금",
       description: "월급",
       date: new Date("2025-09-01"),
       amount: 3000000,

@@ -280,11 +280,11 @@ export const useBudgetStore = create<IBudgetState>()(
         if (currentMonthTransactions.length === 0) return null;
 
         const totalIncome = sumBy(
-          currentMonthTransactions.filter((t) => t.type === "income"),
+          currentMonthTransactions.filter((t) => t.type === "입금"),
           "amount"
         );
         const totalExpense = sumBy(
-          currentMonthTransactions.filter((t) => t.type === "expense"),
+          currentMonthTransactions.filter((t) => t.type === "지출"),
           "amount"
         );
 
@@ -302,7 +302,7 @@ export const useBudgetStore = create<IBudgetState>()(
         const currentMonthExpenses = transactions.filter((transaction) => {
           const transactionMonth = formatYearMonth(new Date(transaction.date));
           return (
-            transactionMonth === selectedMonth && transaction.type === "expense"
+            transactionMonth === selectedMonth && transaction.type === "지출"
           );
         });
 
@@ -328,7 +328,7 @@ export const useBudgetStore = create<IBudgetState>()(
         const currentMonthExpenses = transactions.filter((transaction) => {
           const transactionMonth = formatYearMonth(new Date(transaction.date));
           return (
-            transactionMonth === selectedMonth && transaction.type === "expense"
+            transactionMonth === selectedMonth && transaction.type === "지출"
           );
         });
 

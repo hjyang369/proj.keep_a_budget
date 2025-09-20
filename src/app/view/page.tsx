@@ -249,12 +249,12 @@ const ViewPage: React.FC = () => {
                             <div className="text-right">
                               <span
                                 className={`font-semibold ${
-                                  transaction.type === "income"
+                                  transaction.type === "입금"
                                     ? "text-green-600"
                                     : "text-red-600"
                                 }`}
                               >
-                                {transaction.type === "income" ? "+" : "-"}
+                                {transaction.type === "입금" ? "+" : "-"}
                                 {formatCurrency(transaction.amount)}
                               </span>
                             </div>

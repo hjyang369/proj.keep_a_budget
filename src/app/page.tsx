@@ -11,7 +11,6 @@ import { ITransactionView } from "@/types/budget";
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
   Calendar,
   ArrowRight,
   PlusCircle,
@@ -79,7 +78,6 @@ const TodayTransactions: React.FC<ITodayTransactionsProps> = ({
  */
 const HomePage: React.FC = () => {
   const {
-    getMonthlySummary,
     getCurrentMonthTransactions,
     initializeData,
     selectedMonth,
@@ -94,7 +92,6 @@ const HomePage: React.FC = () => {
     }
   }, [hydrate, initializeData]);
 
-  const monthlySummary = selectedMonth ? getMonthlySummary() : null;
   const currentTransactions = selectedMonth
     ? getCurrentMonthTransactions()
     : [];
@@ -104,17 +101,20 @@ const HomePage: React.FC = () => {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  const [monthTotalExpense, setMonthTotalExpense] = useState(0);
-  const [monthTotalIncome, setMonthTotalIncome] = useState(20000000);
+  // 이번 달 요약 => 총입금, 총지출
+  const [monthlySummary, setMonthlySummary] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    netIncome: 0,
+  });
 
   const getMonthTotalExpense = async () => {
     const res = await fetch(
-      encodeURI(`/api/sheets/get/total/month/expense?sheetName=9월`)
+      encodeURI(`/api/sheets/get/total/month?sheetName=9월`)
     );
     if (res.status === 200) {
       const json = await res.json();
-      console.log(json);
-      setMonthTotalExpense(json.total);
+      setMonthlySummary(json);
     }
   };
 
@@ -137,8 +137,7 @@ const HomePage: React.FC = () => {
                 <span className="text-sm text-gray-600">총 입금</span>
               </div>
               <p className="text-lg font-semibold text-green-600">
-                {/* monthlySummary.totalIncome   */}
-                {formatCurrency(monthTotalIncome)}
+                {formatCurrency(monthlySummary.totalIncome)}
               </p>
             </div>
             <div className="text-center">
@@ -147,8 +146,7 @@ const HomePage: React.FC = () => {
                 <span className="text-sm text-gray-600">총 지출</span>
               </div>
               <p className="text-lg font-semibold text-red-600">
-                {/* monthlySummary.totalExpense  */}
-                {formatCurrency(monthTotalExpense)}
+                {formatCurrency(monthlySummary.totalExpense)}
               </p>
             </div>
           </div>
@@ -157,12 +155,12 @@ const HomePage: React.FC = () => {
               <span className="text-sm text-gray-600">순수익</span>
               <span
                 className={`text-lg font-bold ${
-                  monthTotalIncome - monthTotalExpense >= 0
+                  monthlySummary.netIncome >= 0
                     ? "text-green-600"
                     : "text-red-600"
                 }`}
               >
-                {formatCurrency(monthTotalIncome - monthTotalExpense)}
+                {formatCurrency(monthlySummary.netIncome)}
               </span>
             </div>
           </div>
