@@ -27,7 +27,7 @@ const InputPage: React.FC = () => {
 
   // 폼 상태
   const [formData, setFormData] = useState<ITransactionInput>({
-    type: "expense",
+    type: "지출",
     description: "",
     date: new Date().toISOString().split("T")[0],
     amount: 0,
@@ -44,8 +44,8 @@ const InputPage: React.FC = () => {
 
   // 거래 유형 옵션
   const transactionTypeOptions = [
-    { value: "expense", label: "지출" },
-    { value: "income", label: "입금" },
+    { value: "지출", label: "지출" },
+    { value: "입금", label: "입금" },
   ];
   // 결제수단 옵션
   const [paymentMethodList, setPaymentMethodList] = useState<string[]>([]);
@@ -77,7 +77,7 @@ const InputPage: React.FC = () => {
     );
     if (res.status === 200) {
       const json = await res.json();
-      setCategoryList(json.values);
+      setCategoryList(json.values.slice(1));
     }
   };
 
@@ -129,6 +129,7 @@ const InputPage: React.FC = () => {
       const now = new Date();
       const transactionData: ITransactionInput = {
         ...formData,
+        // TODO 입력한 날짜로 변경
         date: `${now.getFullYear()}. ${now.getMonth() + 1}. ${now.getDate()}`,
         amount: Number(formData.amount),
       };
@@ -137,9 +138,9 @@ const InputPage: React.FC = () => {
 
       // 폼 초기화
       setFormData({
-        type: "expense",
+        type: "지출",
         description: "",
-        date: new Date().toISOString().split("T")[0],
+        date: `${now.getFullYear()}. ${now.getMonth() + 1}. ${now.getDate()}`,
         amount: 0,
         card: "",
         category: "",

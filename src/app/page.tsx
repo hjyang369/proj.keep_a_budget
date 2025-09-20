@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@/components/common/Layout";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -55,10 +55,10 @@ const TodayTransactions: React.FC<ITodayTransactionsProps> = ({
           </div>
           <span
             className={`font-semibold ${
-              transaction.type === "income" ? "text-green-600" : "text-red-600"
+              transaction.type === "입금" ? "text-green-600" : "text-red-600"
             }`}
           >
-            {transaction.type === "income" ? "+" : "-"}
+            {transaction.type === "입금" ? "+" : "-"}
             {formatCurrency(transaction.amount)}
           </span>
         </div>
@@ -104,6 +104,24 @@ const HomePage: React.FC = () => {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
+  const [monthTotalExpense, setMonthTotalExpense] = useState(0);
+  const [monthTotalIncome, setMonthTotalIncome] = useState(20000000);
+
+  const getMonthTotalExpense = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get/total/month/expense?sheetName=9월`)
+    );
+    if (res.status === 200) {
+      const json = await res.json();
+      console.log(json);
+      setMonthTotalExpense(json.total);
+    }
+  };
+
+  useEffect(() => {
+    getMonthTotalExpense();
+  }, []);
+
   return (
     <Layout
       title="공용 가계부"
@@ -111,44 +129,44 @@ const HomePage: React.FC = () => {
     >
       <div className="space-y-6">
         {/* 월별 요약 카드 */}
-        {monthlySummary && (
-          <Card title="이번 달 요약">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <TrendingUp className="w-5 h-5 text-green-500 mr-1" />
-                  <span className="text-sm text-gray-600">총 입금</span>
-                </div>
-                <p className="text-lg font-semibold text-green-600">
-                  {formatCurrency(monthlySummary.totalIncome)}
-                </p>
+        <Card title="이번 달 요약">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <TrendingUp className="w-5 h-5 text-green-500 mr-1" />
+                <span className="text-sm text-gray-600">총 입금</span>
               </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <TrendingDown className="w-5 h-5 text-red-500 mr-1" />
-                  <span className="text-sm text-gray-600">총 지출</span>
-                </div>
-                <p className="text-lg font-semibold text-red-600">
-                  {formatCurrency(monthlySummary.totalExpense)}
-                </p>
-              </div>
+              <p className="text-lg font-semibold text-green-600">
+                {/* monthlySummary.totalIncome   */}
+                {formatCurrency(monthTotalIncome)}
+              </p>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">순수익</span>
-                <span
-                  className={`text-lg font-bold ${
-                    monthlySummary.netIncome >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {formatCurrency(monthlySummary.netIncome)}
-                </span>
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <TrendingDown className="w-5 h-5 text-red-500 mr-1" />
+                <span className="text-sm text-gray-600">총 지출</span>
               </div>
+              <p className="text-lg font-semibold text-red-600">
+                {/* monthlySummary.totalExpense  */}
+                {formatCurrency(monthTotalExpense)}
+              </p>
             </div>
-          </Card>
-        )}
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">순수익</span>
+              <span
+                className={`text-lg font-bold ${
+                  monthTotalIncome - monthTotalExpense >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {formatCurrency(monthTotalIncome - monthTotalExpense)}
+              </span>
+            </div>
+          </div>
+        </Card>
 
         {/* 오늘의 거래 */}
         <Card title="오늘의 거래">
@@ -184,12 +202,12 @@ const HomePage: React.FC = () => {
                   </div>
                   <span
                     className={`font-semibold ${
-                      transaction.type === "income"
+                      transaction.type === "입금"
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
-                    {transaction.type === "income" ? "+" : "-"}
+                    {transaction.type === "입금" ? "+" : "-"}
                     {formatCurrency(transaction.amount)}
                   </span>
                 </div>

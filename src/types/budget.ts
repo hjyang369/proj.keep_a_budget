@@ -1,7 +1,7 @@
 /**
  * 거래 유형 (입금/지출)
  */
-export type TransactionType = "income" | "expense";
+export type TransactionType = "입금" | "지출";
 
 /**
  * 사용자 타입 (성욱/회진)
