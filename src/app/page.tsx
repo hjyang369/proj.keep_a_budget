@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import ClientOnly from "@/components/common/ClientOnly";
 import { useBudgetStore } from "@/store/useBudgetStore";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ITransactionView } from "@/types/budget";
+import { IMonthlySummary, ITransactionView } from "@/types/budget";
 import {
   TrendingUp,
   TrendingDown,
@@ -77,12 +77,7 @@ const TodayTransactions: React.FC<ITodayTransactionsProps> = ({
  * @returns 홈 페이지 컴포넌트
  */
 const HomePage: React.FC = () => {
-  const {
-    getCurrentMonthTransactions,
-    initializeData,
-    selectedMonth,
-    hydrate,
-  } = useBudgetStore();
+  const { initializeData, selectedMonth, hydrate } = useBudgetStore();
 
   // 컴포넌트 마운트 시 데이터 초기화 및 hydration 처리
   useEffect(() => {
@@ -92,17 +87,8 @@ const HomePage: React.FC = () => {
     }
   }, [hydrate, initializeData]);
 
-  const currentTransactions = selectedMonth
-    ? getCurrentMonthTransactions()
-    : [];
-
-  // 최근 거래 내역 (최대 5개)
-  const recentTransactions = currentTransactions
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
-
-  // 이번 달 요약 => 총입금, 총지출
-  const [monthlySummary, setMonthlySummary] = useState({
+  // 이번 달 총입금, 총지출, 순수익
+  const [monthlySummary, setMonthlySummary] = useState<IMonthlySummary>({
     totalIncome: 0,
     totalExpense: 0,
     netIncome: 0,
@@ -118,8 +104,22 @@ const HomePage: React.FC = () => {
     }
   };
 
+  // 최근 거래 내역 (최대 5개)
+  const [currentTransactions, setCurrentTransactions] = useState<
+    ITransactionView[]
+  >([]);
+
+  const getCurrentTransactions = async () => {
+    const res = await fetch(encodeURI(`/api/sheets/get/recent?sheetName=9월`));
+    if (res.status === 200) {
+      const json = await res.json();
+      setCurrentTransactions(json.items);
+    }
+  };
+
   useEffect(() => {
     getMonthTotalExpense();
+    getCurrentTransactions();
   }, []);
 
   return (
@@ -181,14 +181,11 @@ const HomePage: React.FC = () => {
         </Card>
 
         {/* 최근 거래 내역 */}
-        {recentTransactions.length > 0 && (
+        {currentTransactions.length > 0 && (
           <Card title="최근 거래 내역">
             <div className="space-y-3">
-              {recentTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between"
-                >
+              {currentTransactions.map((transaction, idx) => (
+                <div key={idx} className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">
                       {transaction.description}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 
+// TODO ym 지우기
+
 function getAuth() {
   return new google.auth.JWT({
     email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
@@ -113,3 +115,9 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+// 이번달 수입/지출 둘 다
+// "/api/sheets/get/total/month?sheetName=9월"
+
+// 특정 월
+// "/api/sheets/get/total/month?sheetName=9월&ym=2025-08"

@@ -81,7 +81,7 @@ export interface IAdminConfig {
  */
 export interface IMonthlySummary {
   /** 년월 (YYYY-MM 형식) */
-  month: string;
+  month?: string;
   /** 총 입금액 */
   totalIncome: number;
   /** 총 지출액 */
