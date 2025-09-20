@@ -47,18 +47,44 @@ const InputPage: React.FC = () => {
     { value: "expense", label: "지출" },
     { value: "income", label: "입금" },
   ];
-
   // 결제수단 옵션
-  const cardOptions = adminConfig.cards.map((card) => ({
+  const [paymentMethodList, setPaymentMethodList] = useState<string[]>([]);
+  const cardOptions = paymentMethodList.map((card) => ({
     value: card,
     label: card,
   }));
 
   // 카테고리 옵션
-  const categoryOptions = adminConfig.categories.map((category) => ({
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+  const categoryOptions = categoryList.map((category) => ({
     value: category,
     label: category,
   }));
+
+  const getPaymentMethodList = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get?sheetName=설정&range=A:A`)
+    );
+    if (res.status === 200) {
+      const json = await res.json();
+      setPaymentMethodList(json.values.slice(1));
+    }
+  };
+
+  const getCategoryList = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get?sheetName=설정&range=D:D`)
+    );
+    if (res.status === 200) {
+      const json = await res.json();
+      setCategoryList(json.values);
+    }
+  };
+
+  useEffect(() => {
+    getPaymentMethodList();
+    getCategoryList();
+  }, []);
 
   // 폼 검증
   const validateForm = (): boolean => {

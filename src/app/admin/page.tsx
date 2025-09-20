@@ -72,16 +72,20 @@ const AdminPage: React.FC = () => {
     const res = await fetch(
       encodeURI(`/api/sheets/get?sheetName=설정&range=A:A`)
     );
-    const json = await res.json();
-    setPaymentMethodList(json.values.slice(1));
+    if (res.status === 200) {
+      const json = await res.json();
+      setPaymentMethodList(json.values.slice(1));
+    }
   };
 
   const getCategoryList = async () => {
     const res = await fetch(
-      encodeURI(`/api/sheets/get?sheetName=설정&range=D:D`)
+      encodeURI(`/api/sheets/get/category?sheetName=설정&range=D:F`)
     );
-    const json = await res.json();
-    setCategoryList(json.values.slice(1));
+    if (res.status === 200) {
+      const json = await res.json();
+      setCategoryList(json.values);
+    }
   };
 
   useEffect(() => {
@@ -280,17 +284,19 @@ const AdminPage: React.FC = () => {
           <div className="space-y-2">
             {categoryList.map((category) => (
               <div
-                key={category}
+                key={category?.id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div className="flex items-center">
                   <Tag className="w-4 h-4 text-gray-500 mr-2" />
-                  <span className="font-medium text-gray-900">{category}</span>
+                  <span className="font-medium text-gray-900">
+                    {category?.name}
+                  </span>
                 </div>
                 <Button
                   variant="danger"
                   size="small"
-                  onClick={() => handleRemoveCategory(category)}
+                  // onClick={() => handleRemoveCategory(category)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -325,21 +331,24 @@ const AdminPage: React.FC = () => {
       {/* 카테고리별 예산 설정 */}
       <Card title="카테고리별 예산 설정">
         <div className="space-y-4">
-          {localConfig.categories.map((category) => (
-            <div key={category} className="flex items-center justify-between">
+          {categoryList.map((category) => (
+            <div
+              key={category?.id}
+              className="flex items-center justify-between"
+            >
               <div className="flex items-center">
                 <Target className="w-4 h-4 text-gray-500 mr-2" />
-                <span className="font-medium text-gray-900">{category}</span>
+                <span className="font-medium text-gray-900">
+                  {category?.name}
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
-                  value={(
-                    localConfig.categoryBudgets[category] || 0
-                  ).toString()}
-                  onChange={(value) =>
-                    handleCategoryBudgetChange(category, Number(value) || 0)
-                  }
+                  value={(category?.budget || 0).toString()}
+                  // onChange={(value) =>
+                  //   handleCategoryBudgetChange(category, Number(value) || 0)
+                  // }
                   placeholder="0"
                   className="w-32"
                 />
@@ -354,12 +363,10 @@ const AdminPage: React.FC = () => {
                 카테고리별 예산 합계
               </span>
               <span className="font-semibold text-primary-50">
-                {formatCurrency(
-                  Object.values(localConfig.categoryBudgets).reduce(
-                    (sum, budget) => sum + budget,
-                    0
-                  )
-                )}
+                {/* {formatCurrency(
+                  categoryList.reduce((sum, budget) => sum + budget, 0)
+                )} */}
+                0
               </span>
             </div>
           </div>
