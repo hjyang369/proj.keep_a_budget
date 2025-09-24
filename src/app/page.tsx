@@ -191,8 +191,8 @@ const HomePage: React.FC = () => {
                       {transaction.description}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {formatDate(transaction.date)} • {transaction.category} •{" "}
-                      {transaction.card}
+                      {formatDate(transaction?.date as Date)} •{" "}
+                      {transaction.category} • {transaction.card}
                     </p>
                   </div>
                   <span

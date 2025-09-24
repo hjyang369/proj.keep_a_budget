@@ -176,7 +176,7 @@ export const useBudgetStore = create<IBudgetState>()(
 
           // 지출 내역만 필터링
           const expenses = currentMonthTransactions.filter(
-            (t) => t.type === "expense"
+            (t) => t.type === "지출"
           );
 
           // 카테고리별 지출 분석

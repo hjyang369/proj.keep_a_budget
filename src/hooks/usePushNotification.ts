@@ -4,11 +4,10 @@ import {
   onForegroundMessage,
   // requestPermissionAndGetToken,
 } from "@/lib/firebase";
-import { INotificationSettings, NotificationType } from "@/types/budget";
 /**
  * 기본 알림 설정
  */
-const defaultNotificationSettings: INotificationSettings = {
+const defaultNotificationSettings = {
   enabled: false,
   fcmToken: null,
   permissionStatus: "default",
@@ -51,9 +50,7 @@ const defaultNotificationSettings: INotificationSettings = {
  * @returns 알림 관련 상태 및 함수들
  */
 export const usePushNotification = () => {
-  const [settings, setSettings] = useState<INotificationSettings>(
-    defaultNotificationSettings
-  );
+  const [settings, setSettings] = useState(defaultNotificationSettings);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,7 +79,7 @@ export const usePushNotification = () => {
   /**
    * 로컬 스토리지에 설정 저장
    */
-  const saveSettings = useCallback((newSettings: INotificationSettings) => {
+  const saveSettings = useCallback((newSettings: any) => {
     try {
       localStorage.setItem("notificationSettings", JSON.stringify(newSettings));
       setSettings(newSettings);

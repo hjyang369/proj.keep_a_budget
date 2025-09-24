@@ -115,7 +115,7 @@ const NavigationContent: React.FC = () => {
                   "flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1",
                   "hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-50",
                   isActive
-                    ? "text-primary-50 bg-primary-50/10"
+                    ? "text-green-600 bg-primary-50/10"
                     : "text-gray-600 hover:text-gray-900"
                 )}
                 aria-label={item.description}
@@ -123,13 +123,13 @@ const NavigationContent: React.FC = () => {
                 <Icon
                   className={cn(
                     "w-5 h-5 mb-1",
-                    isActive ? "text-primary-50" : "text-gray-500"
+                    isActive ? "text-green-600" : "text-gray-500"
                   )}
                 />
                 <span
                   className={cn(
                     "text-xs font-medium truncate w-full text-center",
-                    isActive ? "text-primary-50" : "text-gray-600"
+                    isActive ? "text-green-600" : "text-gray-600"
                   )}
                 >
                   {item.label}

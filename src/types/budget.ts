@@ -37,7 +37,7 @@ export interface ITransactionView {
   /** 거래 내용 */
   description: string;
   /** 거래 날짜 */
-  date: Date;
+  date: Date | string;
   /** 거래 금액 */
   amount: number;
   /** 결제수단 */
@@ -88,6 +88,18 @@ export interface IMonthlySummary {
   totalExpense: number;
   /** 순수익 (입금 - 지출) */
   netIncome: number;
+}
+
+/**
+ * 카테고리 인터페이스
+ */
+export interface ICategory {
+  /** 카테고리 ID */
+  id: number;
+  /** 카테고리명 */
+  name: string;
+  /** 카테고리 예산 */
+  budget: number;
 }
 
 /**

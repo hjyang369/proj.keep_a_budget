@@ -9,11 +9,10 @@ function getAuth() {
   });
 }
 
-// Sheets/Excel 일련번호 → JS Date
+// Sheets 일련번호 → JS Date
 function excelSerialToDate(n: number) {
   return new Date(Math.round((n - 25569) * 86400000));
 }
-
 // "₩50,000" → 50000
 function parseMoney(v: unknown): number | null {
   if (v == null) return null;
@@ -22,24 +21,20 @@ function parseMoney(v: unknown): number | null {
   const n = Number(v.replace(/[^\d.-]/g, ""));
   return Number.isFinite(n) ? n : null;
 }
-
-// 다양한 날짜 포맷 파싱 (ISO, "YYYY. M. D", 요일문자, 일련번호 등)
+// 다양한 날짜 포맷 파싱 (ISO, "YYYY. M. D", 일련번호 등)
 function parseAnyDate(v: unknown): Date | null {
   if (v == null) return null;
   if (typeof v === "number") return excelSerialToDate(v);
   if (typeof v === "string") {
-    // 1) 직접 Date 시도
     const d1 = new Date(v);
     if (!isNaN(d1.getTime())) return d1;
-    // 2) 앞 10글자(YYYY-MM-DD) 시도
     const d2 = new Date(v.slice(0, 10));
     if (!isNaN(d2.getTime())) return d2;
-    // 3) "YYYY. M. D" 패턴 시도
     const m = v.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
     if (m) {
-      const y = Number(m[1]),
-        mo = Number(m[2]) - 1,
-        d = Number(m[3]);
+      const y = +m[1],
+        mo = +m[2] - 1,
+        d = +m[3];
       const d3 = new Date(y, mo, d);
       if (!isNaN(d3.getTime())) return d3;
     }
@@ -47,14 +42,42 @@ function parseAnyDate(v: unknown): Date | null {
   return null;
 }
 
+// 해당 타임존의 '오늘 00:00~내일 00:00'
+function todayRange(target?: string) {
+  // target: "YYYY-MM-DD" (옵션, 미지정 시 오늘)
+  const base = target ? new Date(target + "T00:00:00") : new Date();
+  const y = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+  }).format(base);
+  const m = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+  }).format(base);
+  const d = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    day: "2-digit",
+  }).format(base);
+  const start = new Date(`${y}-${m}-${d}T00:00:00`);
+  const end = new Date(`${y}-${m}-${d}T24:00:00`);
+  return { start, end, ymd: `${y}-${m}-${d}` };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    // 사용법: /api/sheets/get/recent?sheetName=9월&limit=5
+    // 예) /api/sheets/get/today?sheetName=9월&type=both&tz=Asia/Seoul
     const sheetName = searchParams.get("sheetName") || "9월";
+    const typeParam = (searchParams.get("type") || "both").toLowerCase() as
+      | "expense"
+      | "income"
+      | "both";
+    const expenseLabel = (searchParams.get("expenseLabel") || "지출").trim(); // 시트 A열 라벨
+    const incomeLabel = (searchParams.get("incomeLabel") || "입금").trim();
+    const dateOverride = searchParams.get("date"); // "YYYY-MM-DD"로 특정 날짜 조회 옵션
     const limit = Math.max(
       1,
-      Math.min(100, Number(searchParams.get("limit") || 5))
+      Math.min(200, Number(searchParams.get("limit") || 100))
     );
 
     const auth = getAuth();
@@ -67,19 +90,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 헤더 포함 A~G 넉넉히 읽기
     const { data } = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: `${sheetName}!A:G`,
     });
 
     const rows = data.values ?? [];
-    if (rows.length <= 1) return NextResponse.json({ items: [] });
+    if (rows.length <= 1) return NextResponse.json({ date: null, items: [] });
 
     const [, ...body] = rows;
+    const { start, end, ymd } = todayRange(dateOverride ?? undefined);
 
-    // 행 → 객체로 변환 + 유효한 날짜만
-    const items = body
+    // 행 -> 객체, 오늘 범위만, 타입 필터 적용
+    let items = body
       .map((r) => {
         return {
           type: r[0] || "", // "지출" / "입금" 등
@@ -92,14 +115,27 @@ export async function GET(req: NextRequest) {
           _raw: r,
         };
       })
-      .filter((x) => x.date instanceof Date && !isNaN(x.date.getTime()));
+      .filter(
+        (x) => x.date && (x.date as Date) >= start && (x.date as Date) < end
+      );
 
-    // 날짜 내림차순 정렬 → 상위 N개
+    if (typeParam === "expense") {
+      items = items.filter((x) => x.type === expenseLabel);
+    } else if (typeParam === "income") {
+      items = items.filter((x) => x.type === incomeLabel);
+    } else {
+      items = items.filter(
+        (x) => x.type === expenseLabel || x.type === incomeLabel
+      );
+    }
+
+    // 최신순 정렬 후 제한
     items.sort(
       (a, b) => (b.date as Date).getTime() - (a.date as Date).getTime()
     );
+    items = items.slice(0, limit);
 
-    const topN = items.slice(0, limit).map((x) => ({
+    const payload = items.map((x) => ({
       type: x.type,
       item: x.item,
       amount: x.amount,
@@ -109,7 +145,12 @@ export async function GET(req: NextRequest) {
       note: x.note,
     }));
 
-    return NextResponse.json({ items: topN });
+    return NextResponse.json({
+      date: ymd,
+      count: payload.length,
+      items: payload,
+      meta: { type: typeParam },
+    });
   } catch (e: any) {
     console.error(e);
     return NextResponse.json(
@@ -118,9 +159,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-// 최근 5건
-// "/api/sheets/get/recent?sheetName=9월"
-
-// 최근 10건
-// "/api/sheets/get/recent?sheetName=9월&limit=10"

@@ -5,9 +5,9 @@ import Layout from "@/components/common/Layout";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import NotificationSettings from "@/components/sections/NotificationSettings";
+// import NotificationSettings from "@/components/sections/NotificationSettings";
 import { useBudgetStore } from "@/store/useBudgetStore";
-import { IAdminConfig } from "@/types/budget";
+import { IAdminConfig, ICategory } from "@/types/budget";
 import { formatCurrency } from "@/lib/utils";
 import {
   Plus,
@@ -66,7 +66,7 @@ const AdminPage: React.FC = () => {
   }, [adminConfig]);
 
   const [paymentMethodList, setPaymentMethodList] = useState<string[]>([]);
-  const [categoryList, setCategoryList] = useState<string[]>([]);
+  const [categoryList, setCategoryList] = useState<ICategory[]>([]);
 
   const getPaymentMethodList = async () => {
     const res = await fetch(
@@ -424,7 +424,7 @@ const AdminPage: React.FC = () => {
 
         {/* 탭 콘텐츠 */}
         {activeTab === "general" && <GeneralSettingsContent />}
-        {activeTab === "notifications" && <NotificationSettings />}
+        {/* {activeTab === "notifications" && <NotificationSettings />} */}
       </div>
     </Layout>
   );
