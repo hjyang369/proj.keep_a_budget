@@ -5,6 +5,7 @@ import Layout from "@/components/common/Layout";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
+import Calendar from "@/components/common/Calendar";
 import { useBudgetStore } from "@/store/useBudgetStore";
 import { formatCurrency, formatDate, formatDateShort } from "@/lib/utils";
 import { UserType } from "@/types/budget";
@@ -12,9 +13,10 @@ import {
   Eye,
   TrendingUp,
   TrendingDown,
-  Calendar,
+  Calendar as CalendarIcon,
   Filter,
   User,
+  Grid3X3,
 } from "lucide-react";
 
 /**
@@ -28,6 +30,7 @@ const ViewPage: React.FC = () => {
     getTransactionsByUser,
     getCategorySummary,
     getUserExpenseSummary,
+    getDailySummary,
     selectedUser,
     setSelectedUser,
     selectedMonth,
@@ -41,7 +44,9 @@ const ViewPage: React.FC = () => {
     hydrate();
   }, [hydrate]);
 
-  const [viewMode, setViewMode] = useState<"all" | "user" | "category">("all");
+  const [viewMode, setViewMode] = useState<
+    "all" | "user" | "category" | "calendar"
+  >("calendar");
 
   // 현재 월 거래 내역
   const currentTransactions = getCurrentMonthTransactions();
@@ -54,6 +59,9 @@ const ViewPage: React.FC = () => {
 
   // 사용자별 지출 요약
   const userExpenseSummary = getUserExpenseSummary();
+
+  // 일별 요약
+  const dailySummary = getDailySummary();
 
   // 표시할 거래 내역 결정
   const displayTransactions =
@@ -106,7 +114,7 @@ const ViewPage: React.FC = () => {
               onChange={handleMonthChange}
             />
 
-            <div className="flex space-x-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={viewMode === "all" ? "primary" : "outline"}
                 size="small"
@@ -133,6 +141,15 @@ const ViewPage: React.FC = () => {
               >
                 <Filter className="w-4 h-4 mr-1" />
                 카테고리별
+              </Button>
+              <Button
+                variant={viewMode === "calendar" ? "primary" : "outline"}
+                size="small"
+                onClick={() => setViewMode("calendar")}
+                className="flex-1"
+              >
+                <Grid3X3 className="w-4 h-4 mr-1" />
+                달력뷰
               </Button>
             </div>
 
@@ -209,68 +226,85 @@ const ViewPage: React.FC = () => {
           </Card>
         )}
 
-        {/* 거래 내역 목록 */}
-        <Card title={`거래 내역 (${displayTransactions.length}건)`}>
-          {displayTransactions.length > 0 ? (
-            <div className="space-y-4">
-              {Object.entries(transactionsByDate)
-                .sort(
-                  ([a], [b]) => new Date(b).getTime() - new Date(a).getTime()
-                )
-                .map(([date, transactions]) => (
-                  <div key={date}>
-                    <div className="flex items-center mb-3">
-                      <Calendar className="w-4 h-4 text-gray-500 mr-2" />
-                      <h3 className="font-medium text-gray-900">
-                        {formatDate(new Date(date))}
-                      </h3>
-                    </div>
-                    <div className="space-y-2 ml-6">
-                      {transactions
-                        .sort(
-                          (a, b) =>
-                            new Date(b.date).getTime() -
-                            new Date(a.date).getTime()
-                        )
-                        .map((transaction) => (
-                          <div
-                            key={transaction.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">
-                                {transaction.description}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {transaction.category} • {transaction.card} •{" "}
-                                {transaction.owner}
-                              </p>
+        {/* 달력뷰 */}
+        {viewMode === "calendar" && (
+          <Card title="달력뷰">
+            <Calendar
+              selectedMonth={selectedMonth}
+              onMonthChange={handleMonthChange}
+              dailySummary={dailySummary}
+              onDateClick={(date) => {
+                // 날짜 클릭 시 해당 날짜의 거래 내역을 보여주는 로직 추가 가능
+                console.log("선택된 날짜:", date);
+              }}
+            />
+          </Card>
+        )}
+
+        {/* 거래 내역 목록 (달력뷰가 아닐 때만 표시) */}
+        {viewMode !== "calendar" && (
+          <Card title={`거래 내역 (${displayTransactions.length}건)`}>
+            {displayTransactions.length > 0 ? (
+              <div className="space-y-4">
+                {Object.entries(transactionsByDate)
+                  .sort(
+                    ([a], [b]) => new Date(b).getTime() - new Date(a).getTime()
+                  )
+                  .map(([date, transactions]) => (
+                    <div key={date}>
+                      <div className="flex items-center mb-3">
+                        <CalendarIcon className="w-4 h-4 text-gray-500 mr-2" />
+                        <h3 className="font-medium text-gray-900">
+                          {formatDate(new Date(date))}
+                        </h3>
+                      </div>
+                      <div className="space-y-2 ml-6">
+                        {transactions
+                          .sort(
+                            (a, b) =>
+                              new Date(b.date).getTime() -
+                              new Date(a.date).getTime()
+                          )
+                          .map((transaction) => (
+                            <div
+                              key={transaction.id}
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-900">
+                                  {transaction.description}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {transaction.category} • {transaction.card} •{" "}
+                                  {transaction.owner}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <span
+                                  className={`font-semibold ${
+                                    transaction.type === "입금"
+                                      ? "text-green-600"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {transaction.type === "입금" ? "+" : "-"}
+                                  {formatCurrency(transaction.amount)}
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-right">
-                              <span
-                                className={`font-semibold ${
-                                  transaction.type === "입금"
-                                    ? "text-green-600"
-                                    : "text-red-600"
-                                }`}
-                              >
-                                {transaction.type === "입금" ? "+" : "-"}
-                                {formatCurrency(transaction.amount)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">거래 내역이 없습니다</p>
-            </div>
-          )}
-        </Card>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">거래 내역이 없습니다</p>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </Layout>
   );

@@ -107,12 +107,15 @@ export function getDaysBetween(startDate: Date, endDate: Date): number {
 /**
  * 배열을 카테고리별로 그룹화
  * @param items - 그룹화할 아이템 배열
- * @param key - 그룹화 기준 키
+ * @param key - 그룹화 기준 키 또는 함수
  * @returns 그룹화된 객체
  */
-export function groupBy<T>(items: T[], key: keyof T): Record<string, T[]> {
+export function groupBy<T>(
+  items: T[],
+  key: keyof T | ((item: T) => string)
+): Record<string, T[]> {
   return items.reduce((groups, item) => {
-    const group = String(item[key]);
+    const group = typeof key === "function" ? key(item) : String(item[key]);
     groups[group] = groups[group] || [];
     groups[group].push(item);
     return groups;

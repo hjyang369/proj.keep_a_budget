@@ -150,6 +150,22 @@ export interface IFormErrors {
 }
 
 /**
+ * 일별 거래 요약 인터페이스
+ */
+export interface IDailySummary {
+  /** 날짜 (YYYY-MM-DD 형식) */
+  date: string;
+  /** 총 입금액 */
+  totalIncome: number;
+  /** 총 지출액 */
+  totalExpense: number;
+  /** 순수익 (입금 - 지출) */
+  netIncome: number;
+  /** 거래 건수 */
+  transactionCount: number;
+}
+
+/**
  * API 응답 기본 인터페이스
  */
 export interface IApiResponse<T = any> {

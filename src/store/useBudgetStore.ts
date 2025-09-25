@@ -8,6 +8,7 @@ import {
   IMonthlySummary,
   ICategorySummary,
   IUserExpenseSummary,
+  IDailySummary,
   UserType,
 } from "@/types/budget";
 import {
@@ -62,6 +63,7 @@ interface IBudgetState {
   getUserExpenseSummary: () => IUserExpenseSummary[];
   getCurrentMonthTransactions: () => ITransactionView[];
   getTransactionsByUser: (user: UserType) => ITransactionView[];
+  getDailySummary: () => IDailySummary[];
 }
 
 /**
@@ -375,6 +377,47 @@ export const useBudgetStore = create<IBudgetState>()(
             transactionMonth === selectedMonth && transaction.owner === user
           );
         });
+      },
+
+      // 일별 요약 계산
+      getDailySummary: () => {
+        const { transactions, selectedMonth } = get();
+        const currentMonthTransactions = transactions.filter((transaction) => {
+          const transactionMonth = formatYearMonth(new Date(transaction.date));
+          return transactionMonth === selectedMonth;
+        });
+
+        // 날짜별로 그룹화
+        const dailyGroups = groupBy(
+          currentMonthTransactions,
+          (transaction: ITransactionView) => {
+            const date = new Date(transaction.date);
+            return date.toISOString().split("T")[0]; // YYYY-MM-DD 형식
+          }
+        );
+
+        return Object.entries(dailyGroups)
+          .map(([date, dayTransactions]) => {
+            const totalIncome = sumBy(
+              dayTransactions.filter((t) => t.type === "입금"),
+              "amount"
+            );
+            const totalExpense = sumBy(
+              dayTransactions.filter((t) => t.type === "지출"),
+              "amount"
+            );
+
+            return {
+              date,
+              totalIncome,
+              totalExpense,
+              netIncome: totalIncome - totalExpense,
+              transactionCount: dayTransactions.length,
+            };
+          })
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
       },
     }),
     {
