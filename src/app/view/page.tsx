@@ -8,16 +8,15 @@ import Select from "@/components/ui/Select";
 import Calendar from "@/components/common/Calendar";
 import { useBudgetStore } from "@/store/useBudgetStore";
 import { formatCurrency, formatDate, formatDateShort } from "@/lib/utils";
-import { UserType } from "@/types/budget";
+import { IDailySummary, UserType } from "@/types/budget";
 import {
   Eye,
-  TrendingUp,
-  TrendingDown,
   Calendar as CalendarIcon,
   Filter,
   User,
   Grid3X3,
 } from "lucide-react";
+import TransactionCard from "@/components/common/transactionCard";
 
 /**
  * 거래 내역 조회 페이지 컴포넌트
@@ -30,7 +29,6 @@ const ViewPage: React.FC = () => {
     getTransactionsByUser,
     getCategorySummary,
     getUserExpenseSummary,
-    getDailySummary,
     selectedUser,
     setSelectedUser,
     selectedMonth,
@@ -48,6 +46,9 @@ const ViewPage: React.FC = () => {
     "all" | "user" | "category" | "calendar"
   >("calendar");
 
+  /** 선택된 날짜 */
+  const [selectedDate, setSelectedDate] = useState<string>("");
+
   // 현재 월 거래 내역
   const currentTransactions = getCurrentMonthTransactions();
 
@@ -59,9 +60,6 @@ const ViewPage: React.FC = () => {
 
   // 사용자별 지출 요약
   const userExpenseSummary = getUserExpenseSummary();
-
-  // 일별 요약
-  const dailySummary = getDailySummary();
 
   // 표시할 거래 내역 결정
   const displayTransactions =
@@ -100,6 +98,25 @@ const ViewPage: React.FC = () => {
     },
     {} as Record<string, typeof displayTransactions>
   );
+
+  const [dailySummaryList, setDailySummaryList] = useState<
+    Record<string, IDailySummary>
+  >({});
+
+  const getDailySummary = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get/total/daily?sheetName=9월`)
+    );
+    if (res.status === 200) {
+      const json = await res.json();
+      console.log(json);
+      setDailySummaryList(json.daily);
+    }
+  };
+
+  useEffect(() => {
+    getDailySummary();
+  }, []);
 
   return (
     <Layout title="거래 내역 조회" description={`${selectedMonth} 거래 내역`}>
@@ -232,12 +249,28 @@ const ViewPage: React.FC = () => {
             <Calendar
               selectedMonth={selectedMonth}
               onMonthChange={handleMonthChange}
-              dailySummary={dailySummary}
-              onDateClick={(date) => {
-                // 날짜 클릭 시 해당 날짜의 거래 내역을 보여주는 로직 추가 가능
-                console.log("선택된 날짜:", date);
-              }}
+              dailySummary={dailySummaryList}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
             />
+          </Card>
+        )}
+
+        {/* 선택된 날짜의 거래 내역 */}
+        {selectedDate && (
+          <Card title={`${selectedDate}의 거래 내역`}>
+            <div className="space-y-4">
+              {dailySummaryList[selectedDate].detail?.map(
+                (transaction, idx) => {
+                  return (
+                    <TransactionCard
+                      key={transaction.id + idx}
+                      transaction={transaction}
+                    />
+                  );
+                }
+              )}
+            </div>
           </Card>
         )}
 

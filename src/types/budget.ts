@@ -160,9 +160,11 @@ export interface IDailySummary {
   /** 총 지출액 */
   totalExpense: number;
   /** 순수익 (입금 - 지출) */
-  netIncome: number;
+  netIncome?: number;
   /** 거래 건수 */
-  transactionCount: number;
+  transactionCount?: number;
+  /** 거래 내역 상세 */
+  detail?: ITransactionView[];
 }
 
 /**

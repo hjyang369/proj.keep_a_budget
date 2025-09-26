@@ -19,6 +19,7 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
+import TransactionCard from "@/components/common/transactionCard";
 
 /**
  * 오늘의 거래 컴포넌트 props
@@ -43,7 +44,10 @@ const TodayTransactions: React.FC<ITodayTransactionsProps> = ({
   return todayTransactions.length > 0 ? (
     <div className="space-y-3">
       {todayTransactions.map((transaction) => (
-        <div key={transaction.id} className="flex items-center justify-between">
+        <div
+          key={transaction.id + transaction.date}
+          className="flex items-center justify-between"
+        >
           <div className="flex-1">
             <p className="font-medium text-gray-900">
               {transaction.description}
@@ -185,27 +189,7 @@ const HomePage: React.FC = () => {
           <Card title="최근 거래 내역">
             <div className="space-y-3">
               {currentTransactions.map((transaction, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      {transaction.description}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {formatDate(transaction?.date as Date)} •{" "}
-                      {transaction.category} • {transaction.card}
-                    </p>
-                  </div>
-                  <span
-                    className={`font-semibold ${
-                      transaction.type === "입금"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {transaction.type === "입금" ? "+" : "-"}
-                    {formatCurrency(transaction.amount)}
-                  </span>
-                </div>
+                <TransactionCard key={idx} transaction={transaction} />
               ))}
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">

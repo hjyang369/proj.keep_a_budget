@@ -25,6 +25,21 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
+ * 날짜를 로컬 타임존으로 포맷팅
+ * @param d - 포맷팅할 날짜
+ * @returns 포맷팅된 날짜 문자열 (예: "2025-09-07")
+ */
+export function toLocalDateKey(d: Date): string {
+  const TZ = "Asia/Seoul";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d); // 'YYYY-MM-DD'
+}
+
+/**
  * 숫자를 천 단위 구분자로 포맷팅
  * @param amount - 포맷팅할 금액
  * @returns 포맷팅된 금액 문자열 (예: "1,000")

@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { formatCurrency } from "@/lib/utils";
+import React, { useState } from "react";
+import { formatCurrency, toLocalDateKey } from "@/lib/utils";
 import { IDailySummary } from "@/types/budget";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -14,9 +14,11 @@ interface ICalendarProps {
   /** 월 변경 핸들러 */
   onMonthChange: (month: string) => void;
   /** 일별 요약 데이터 */
-  dailySummary: IDailySummary[];
-  /** 날짜 클릭 핸들러 */
-  onDateClick?: (date: string) => void;
+  dailySummary: Record<string, IDailySummary>;
+  /** 선택된 날짜 */
+  selectedDate: string;
+  /** 선택된 날짜 변경 핸들러 */
+  setSelectedDate: (date: string) => void;
 }
 
 /**
@@ -29,7 +31,8 @@ const Calendar: React.FC<ICalendarProps> = ({
   selectedMonth,
   onMonthChange,
   dailySummary,
-  onDateClick,
+  selectedDate,
+  setSelectedDate,
 }) => {
   // 선택된 월의 첫째 날과 마지막 날 계산
   const currentDate = new Date(selectedMonth + "-01");
@@ -62,11 +65,6 @@ const Calendar: React.FC<ICalendarProps> = ({
     calendarDays.push(nextDate);
   }
 
-  // 일별 요약 데이터를 Map으로 변환 (빠른 검색을 위해)
-  const dailySummaryMap = new Map(
-    dailySummary.map((summary) => [summary.date, summary])
-  );
-
   // 월 변경 핸들러
   const handlePrevMonth = () => {
     const prevDate = new Date(currentDate);
@@ -81,10 +79,8 @@ const Calendar: React.FC<ICalendarProps> = ({
   };
 
   // 날짜 클릭 핸들러
-  const handleDateClick = (date: Date) => {
-    if (onDateClick) {
-      onDateClick(date.toISOString().split("T")[0]);
-    }
+  const handleDateClick = (date: string) => {
+    setSelectedDate(date);
   };
 
   // 요일 헤더
@@ -132,34 +128,33 @@ const Calendar: React.FC<ICalendarProps> = ({
         {calendarDays.map((date, index) => {
           if (!date) return <div key={index} className="h-24" />;
 
-          const dateString = date.toISOString().split("T")[0];
           const isCurrentMonth = date.getMonth() === month;
-          const isToday = dateString === new Date().toISOString().split("T")[0];
-          const summary = dailySummaryMap.get(dateString);
+          const dateKey = toLocalDateKey(date); // 달력 날짜
+          const todayKey = toLocalDateKey(new Date()); // 오늘 날짜
+          const isToday = dateKey === todayKey;
+          const summary = dailySummary[dateKey]; // 일별 요약 데이터
+
+          const defaultFontColor = isCurrentMonth
+            ? "text-gray-900"
+            : "text-gray-400";
 
           return (
             <div
-              key={dateString}
+              key={dateKey + index}
               className={`
                 h-24 p-2 border-r border-b border-gray-100 cursor-pointer
                 transition-colors hover:bg-gray-50
                 ${!isCurrentMonth ? "bg-gray-50 text-gray-400" : "bg-white"}
                 ${isToday ? "bg-blue-50 border-blue-200" : ""}
               `}
-              onClick={() => handleDateClick(date)}
+              onClick={() => handleDateClick(dateKey)}
             >
               <div className="flex flex-col h-full">
                 {/* 날짜 */}
                 <div
                   className={`
                     text-sm font-medium mb-1
-                    ${
-                      isToday
-                        ? "text-blue-600"
-                        : isCurrentMonth
-                        ? "text-gray-900"
-                        : "text-gray-400"
-                    }
+                    ${isToday ? "text-blue-600" : defaultFontColor}
                   `}
                 >
                   {date.getDate()}
@@ -170,17 +165,12 @@ const Calendar: React.FC<ICalendarProps> = ({
                   <div className="flex-1 space-y-1">
                     {summary.totalIncome > 0 && (
                       <div className="text-xs text-green-600 font-medium">
-                        +{formatCurrency(summary.totalIncome)}
+                        {summary.totalIncome}
                       </div>
                     )}
                     {summary.totalExpense > 0 && (
                       <div className="text-xs text-red-600 font-medium">
-                        -{formatCurrency(summary.totalExpense)}
-                      </div>
-                    )}
-                    {summary.transactionCount > 0 && (
-                      <div className="text-xs text-gray-500">
-                        {summary.transactionCount}건
+                        {summary.totalExpense}
                       </div>
                     )}
                   </div>
