@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Calendar from "@/components/common/Calendar";
 import { useBudgetStore } from "@/store/useBudgetStore";
-import { formatCurrency, formatDate, formatDateShort } from "@/lib/utils";
+import { formatCurrency, formatDate, toLocalDateKey } from "@/lib/utils";
 import { IDailySummary, UserType } from "@/types/budget";
 import {
   Eye,
@@ -46,8 +46,10 @@ const ViewPage: React.FC = () => {
     "all" | "user" | "category" | "calendar"
   >("calendar");
 
-  /** 선택된 날짜 */
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  /** 선택된 날짜 default : 오늘*/
+  const [selectedDate, setSelectedDate] = useState<string>(
+    toLocalDateKey(new Date())
+  );
 
   // 현재 월 거래 내역
   const currentTransactions = getCurrentMonthTransactions();
@@ -260,15 +262,22 @@ const ViewPage: React.FC = () => {
         {selectedDate && (
           <Card title={`${selectedDate}의 거래 내역`}>
             <div className="space-y-4">
-              {dailySummaryList[selectedDate].detail?.map(
-                (transaction, idx) => {
-                  return (
-                    <TransactionCard
-                      key={transaction.id + idx}
-                      transaction={transaction}
-                    />
-                  );
-                }
+              {dailySummaryList[selectedDate]?.detail ? (
+                dailySummaryList[selectedDate]?.detail?.map(
+                  (transaction, idx) => {
+                    return (
+                      <TransactionCard
+                        key={transaction.id + idx}
+                        transaction={transaction}
+                      />
+                    );
+                  }
+                )
+              ) : (
+                <div className="text-center py-8">
+                  <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">거래 내역이 없습니다</p>
+                </div>
               )}
             </div>
           </Card>

@@ -59,7 +59,7 @@ const Calendar: React.FC<ICalendarProps> = ({
   }
 
   // 다음 달의 첫째 날들 (빈 칸 채우기)
-  const remainingDays = 42 - calendarDays.length; // 6주 * 7일 = 42
+  const remainingDays = 35 - calendarDays.length;
   for (let day = 1; day <= remainingDays; day++) {
     const nextDate = new Date(year, month + 1, day);
     calendarDays.push(nextDate);
@@ -143,9 +143,14 @@ const Calendar: React.FC<ICalendarProps> = ({
               key={dateKey + index}
               className={`
                 h-24 p-2 border-r border-b border-gray-100 cursor-pointer
-                transition-colors hover:bg-gray-50
+                transition-colors
                 ${!isCurrentMonth ? "bg-gray-50 text-gray-400" : "bg-white"}
                 ${isToday ? "bg-blue-50 border-blue-200" : ""}
+                ${
+                  selectedDate === dateKey
+                    ? "bg-blue-100 hover:bg-blue-100"
+                    : "hover:bg-gray-50"
+                }
               `}
               onClick={() => handleDateClick(dateKey)}
             >
