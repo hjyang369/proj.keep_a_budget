@@ -22,7 +22,7 @@ function parseMoney(v: unknown): number | null {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const sheetName = searchParams.get("sheetName") || "9월";
+    const sheetName = `${searchParams.get("sheetName")}월` || "9월";
     const expenseLabel = "지출";
     const incomeLabel = "입금";
 

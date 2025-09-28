@@ -5,10 +5,9 @@ import Layout from "@/components/common/Layout";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
-import Calendar from "@/components/common/Calendar";
 import { useBudgetStore } from "@/store/useBudgetStore";
-import { formatCurrency, formatDate, toLocalDateKey } from "@/lib/utils";
-import { IDailySummary, UserType } from "@/types/budget";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { UserType } from "@/types/budget";
 import {
   Eye,
   Calendar as CalendarIcon,
@@ -16,7 +15,6 @@ import {
   User,
   Grid3X3,
 } from "lucide-react";
-import TransactionCard from "@/components/common/transactionCard";
 
 /**
  * 거래 내역 조회 페이지 컴포넌트
@@ -45,11 +43,6 @@ const ViewPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<
     "all" | "user" | "category" | "calendar"
   >("calendar");
-
-  /** 선택된 날짜 default : 오늘*/
-  const [selectedDate, setSelectedDate] = useState<string>(
-    toLocalDateKey(new Date())
-  );
 
   // 현재 월 거래 내역
   const currentTransactions = getCurrentMonthTransactions();
@@ -83,9 +76,9 @@ const ViewPage: React.FC = () => {
   });
 
   // 월 변경 핸들러
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    loadTransactions(month);
+  const handleMonthChange = (yearAndMonth: string) => {
+    setSelectedMonth(yearAndMonth);
+    loadTransactions(yearAndMonth);
   };
 
   // 거래 내역을 날짜별로 그룹화
@@ -100,25 +93,6 @@ const ViewPage: React.FC = () => {
     },
     {} as Record<string, typeof displayTransactions>
   );
-
-  const [dailySummaryList, setDailySummaryList] = useState<
-    Record<string, IDailySummary>
-  >({});
-
-  const getDailySummary = async () => {
-    const res = await fetch(
-      encodeURI(`/api/sheets/get/total/daily?sheetName=9월`)
-    );
-    if (res.status === 200) {
-      const json = await res.json();
-      console.log(json);
-      setDailySummaryList(json.daily);
-    }
-  };
-
-  useEffect(() => {
-    getDailySummary();
-  }, []);
 
   return (
     <Layout title="거래 내역 조회" description={`${selectedMonth} 거래 내역`}>
@@ -241,44 +215,6 @@ const ViewPage: React.FC = () => {
                     </div>
                   </div>
                 ))}
-            </div>
-          </Card>
-        )}
-
-        {/* 달력뷰 */}
-        {viewMode === "calendar" && (
-          <Card title="달력뷰">
-            <Calendar
-              selectedMonth={selectedMonth}
-              onMonthChange={handleMonthChange}
-              dailySummary={dailySummaryList}
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-            />
-          </Card>
-        )}
-
-        {/* 선택된 날짜의 거래 내역 */}
-        {selectedDate && (
-          <Card title={`${selectedDate}의 거래 내역`}>
-            <div className="space-y-4">
-              {dailySummaryList[selectedDate]?.detail ? (
-                dailySummaryList[selectedDate]?.detail?.map(
-                  (transaction, idx) => {
-                    return (
-                      <TransactionCard
-                        key={transaction.id + idx}
-                        transaction={transaction}
-                      />
-                    );
-                  }
-                )
-              ) : (
-                <div className="text-center py-8">
-                  <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">거래 내역이 없습니다</p>
-                </div>
-              )}
             </div>
           </Card>
         )}

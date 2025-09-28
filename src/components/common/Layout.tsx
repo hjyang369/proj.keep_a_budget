@@ -48,7 +48,7 @@ const Layout: React.FC<ILayoutProps> = ({
         <div
           className={cn(
             "px-4 py-6",
-            !hideNavigation && "pb-20" // 네비게이션 공간 확보
+            !hideNavigation && "pb-28" // 네비게이션 공간 확보
           )}
         >
           {children}

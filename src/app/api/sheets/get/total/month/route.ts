@@ -50,7 +50,7 @@ function monthRange(ym?: string, tz = "Asia/Seoul") {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const sheetName = searchParams.get("sheetName") || "9월";
+    const sheetName = `${searchParams.get("sheetName")}월` || "9월";
     const ym = searchParams.get("ym") || undefined; // "YYYY-MM"
 
     const expenseLbl = searchParams.get("expenseLabel") || "지출";

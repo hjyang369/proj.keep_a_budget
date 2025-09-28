@@ -3,17 +3,15 @@
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/common/Layout";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 import ClientOnly from "@/components/common/ClientOnly";
+import Calendar from "@/components/common/Calendar";
 import { useBudgetStore } from "@/store/useBudgetStore";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { IMonthlySummary, ITransactionView } from "@/types/budget";
+import { formatCurrency, toLocalDateKey } from "@/lib/utils";
+import { IDailySummary, IMonthlySummary } from "@/types/budget";
 import {
   TrendingUp,
   TrendingDown,
-  Calendar,
   ArrowRight,
-  PlusCircle,
   Eye,
   BarChart3,
   Settings,
@@ -21,67 +19,9 @@ import {
 import Link from "next/link";
 import TransactionCard from "@/components/common/transactionCard";
 
-/**
- * 오늘의 거래 컴포넌트 props
- */
-interface ITodayTransactionsProps {
-  transactions: ITransactionView[];
-}
-
-/**
- * 오늘의 거래 컴포넌트 (클라이언트에서만 렌더링)
- */
-const TodayTransactions: React.FC<ITodayTransactionsProps> = ({
-  transactions,
-}) => {
-  const today = new Date();
-  const todayString = today.toDateString();
-  const todayTransactions = transactions.filter((transaction) => {
-    const transactionDate = new Date(transaction.date);
-    return transactionDate.toDateString() === todayString;
-  });
-
-  return todayTransactions.length > 0 ? (
-    <div className="space-y-3">
-      {todayTransactions.map((transaction) => (
-        <div
-          key={transaction.id + transaction.date}
-          className="flex items-center justify-between"
-        >
-          <div className="flex-1">
-            <p className="font-medium text-gray-900">
-              {transaction.description}
-            </p>
-            <p className="text-sm text-gray-500">
-              {transaction.category} • {transaction.card}
-            </p>
-          </div>
-          <span
-            className={`font-semibold ${
-              transaction.type === "입금" ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {transaction.type === "입금" ? "+" : "-"}
-            {formatCurrency(transaction.amount)}
-          </span>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div className="text-center py-4">
-      <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-      <p className="text-gray-500">오늘은 아직 거래 내역이 없습니다</p>
-    </div>
-  );
-};
-
-/**
- * 메인 홈 페이지 컴포넌트
- *
- * @returns 홈 페이지 컴포넌트
- */
 const HomePage: React.FC = () => {
-  const { initializeData, selectedMonth, hydrate } = useBudgetStore();
+  const { initializeData, hydrate, setSelectedMonth, loadTransactions } =
+    useBudgetStore();
 
   // 컴포넌트 마운트 시 데이터 초기화 및 hydration 처리
   useEffect(() => {
@@ -98,9 +38,21 @@ const HomePage: React.FC = () => {
     netIncome: 0,
   });
 
+  /** 선택된 날짜 (default: 오늘) (YYYY-MM-DD)*/
+  const [selectedDate, setSelectedDate] = useState<string>(
+    toLocalDateKey(new Date())
+  );
+  const [year, month, day] = selectedDate.split("-");
+  const monthKey = parseInt(month, 10).toString();
+  // 일별 요약 데이터
+  const [dailySummaryList, setDailySummaryList] = useState<
+    Record<string, IDailySummary>
+  >({});
+
+  // 이번 달 총입금, 총지출, 순수익 조회
   const getMonthTotalExpense = async () => {
     const res = await fetch(
-      encodeURI(`/api/sheets/get/total/month?sheetName=9월`)
+      encodeURI(`/api/sheets/get/total/month?sheetName=${monthKey}`)
     );
     if (res.status === 200) {
       const json = await res.json();
@@ -108,32 +60,33 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // 최근 거래 내역 (최대 5개)
-  const [currentTransactions, setCurrentTransactions] = useState<
-    ITransactionView[]
-  >([]);
-
-  const getCurrentTransactions = async () => {
-    const res = await fetch(encodeURI(`/api/sheets/get/recent?sheetName=9월`));
+  // 일별 조회
+  const getDailySummary = async () => {
+    const res = await fetch(
+      encodeURI(`/api/sheets/get/total/daily?sheetName=${monthKey}`)
+    );
     if (res.status === 200) {
       const json = await res.json();
-      setCurrentTransactions(json.items);
+      setDailySummaryList(json.daily);
     }
   };
 
   useEffect(() => {
     getMonthTotalExpense();
-    getCurrentTransactions();
-  }, []);
+    getDailySummary();
+  }, [month]);
+
+  // 월 변경 핸들러
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
+    loadTransactions(month);
+  };
 
   return (
-    <Layout
-      title="공용 가계부"
-      description={selectedMonth ? `${selectedMonth} 가계 현황` : "가계 현황"}
-    >
+    <Layout>
       <div className="space-y-6">
         {/* 월별 요약 카드 */}
-        <Card title="이번 달 요약">
+        <Card title={`${year}년 ${monthKey}월 요약`}>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
@@ -167,58 +120,56 @@ const HomePage: React.FC = () => {
                 {formatCurrency(monthlySummary.netIncome)}
               </span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">저축</span>
+              <span
+                className={`text-lg font-bold ${
+                  monthlySummary.netIncome >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {/* TODO 저축 내역 추가 */}
+                {formatCurrency(monthlySummary.netIncome)}
+              </span>
+            </div>
           </div>
         </Card>
 
-        {/* 오늘의 거래 */}
-        <Card title="오늘의 거래">
-          <ClientOnly
-            fallback={
-              <div className="text-center py-4">
-                <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">로딩 중...</p>
-              </div>
-            }
-          >
-            <TodayTransactions transactions={currentTransactions} />
-          </ClientOnly>
-        </Card>
+        {/* 달력뷰 */}
+        <Calendar
+          selectedMonth={month}
+          selectedYear={year}
+          onMonthChange={handleMonthChange}
+          dailySummary={dailySummaryList}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+        />
 
-        {/* 최근 거래 내역 */}
-        {currentTransactions.length > 0 && (
-          <Card title="최근 거래 내역">
-            <div className="space-y-3">
-              {currentTransactions.map((transaction, idx) => (
-                <TransactionCard key={idx} transaction={transaction} />
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <Link href="/view">
-                <Button variant="outline" className="w-full">
-                  <Eye className="w-4 h-4 mr-2" />
-                  전체 내역 보기
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+        {/* 선택된 날짜의 거래 내역 */}
+        {selectedDate && (
+          <Card title={`${selectedDate}의 거래 내역`}>
+            <div className="space-y-4">
+              {dailySummaryList[selectedDate]?.detail ? (
+                dailySummaryList[selectedDate]?.detail?.map(
+                  (transaction, idx) => {
+                    return (
+                      <TransactionCard
+                        key={transaction.id + idx}
+                        transaction={transaction}
+                      />
+                    );
+                  }
+                )
+              ) : (
+                <div className="text-center py-8">
+                  <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">거래 내역이 없습니다</p>
+                </div>
+              )}
             </div>
           </Card>
         )}
-
-        {/* 빠른 액션 버튼들 */}
-        <div className="grid grid-cols-2 gap-4">
-          <Link href="/input">
-            <Button variant="primary" className="w-full">
-              <PlusCircle className="w-4 h-4 mr-2" />
-              거래 입력
-            </Button>
-          </Link>
-          <Link href="/analysis">
-            <Button variant="secondary" className="w-full">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              분석 보기
-            </Button>
-          </Link>
-        </div>
 
         {/* 빠른 링크 */}
         <Card title="빠른 링크">

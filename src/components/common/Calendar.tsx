@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { formatCurrency, toLocalDateKey } from "@/lib/utils";
+import { toLocalDateKey } from "@/lib/utils";
 import { IDailySummary } from "@/types/budget";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -9,8 +8,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  * 달력 컴포넌트의 props 인터페이스
  */
 interface ICalendarProps {
-  /** 선택된 월 (YYYY-MM 형식) */
+  /** 선택된 월 (MM 형식) */
   selectedMonth: string;
+  /** 선택된 년도 (YYYY 형식) */
+  selectedYear: string;
   /** 월 변경 핸들러 */
   onMonthChange: (month: string) => void;
   /** 일별 요약 데이터 */
@@ -29,18 +30,19 @@ interface ICalendarProps {
  */
 const Calendar: React.FC<ICalendarProps> = ({
   selectedMonth,
+  selectedYear,
   onMonthChange,
   dailySummary,
   selectedDate,
   setSelectedDate,
 }) => {
   // 선택된 월의 첫째 날과 마지막 날 계산
-  const currentDate = new Date(selectedMonth + "-01");
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  const currentDate = new Date(selectedYear + "-" + selectedMonth + "-01");
+  const year = Number(selectedYear);
+  const month = Number(selectedMonth);
 
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
   const firstDayOfWeek = firstDay.getDay(); // 0: 일요일, 1: 월요일, ...
 
   // 달력에 표시할 날짜들 생성
@@ -55,13 +57,13 @@ const Calendar: React.FC<ICalendarProps> = ({
 
   // 현재 달의 모든 날들
   for (let day = 1; day <= lastDay.getDate(); day++) {
-    calendarDays.push(new Date(year, month, day));
+    calendarDays.push(new Date(year, month - 1, day));
   }
 
   // 다음 달의 첫째 날들 (빈 칸 채우기)
   const remainingDays = 35 - calendarDays.length;
   for (let day = 1; day <= remainingDays; day++) {
-    const nextDate = new Date(year, month + 1, day);
+    const nextDate = new Date(year, month, day);
     calendarDays.push(nextDate);
   }
 
@@ -99,7 +101,7 @@ const Calendar: React.FC<ICalendarProps> = ({
         </button>
 
         <h2 className="text-lg font-semibold text-gray-900">
-          {year}년 {month + 1}월
+          {year}년 {month}월
         </h2>
 
         <button
@@ -128,7 +130,7 @@ const Calendar: React.FC<ICalendarProps> = ({
         {calendarDays.map((date, index) => {
           if (!date) return <div key={index} className="h-24" />;
 
-          const isCurrentMonth = date.getMonth() === month;
+          const isCurrentMonth = date.getMonth() === month - 1;
           const dateKey = toLocalDateKey(date); // 달력 날짜
           const todayKey = toLocalDateKey(new Date()); // 오늘 날짜
           const isToday = dateKey === todayKey;
@@ -142,15 +144,14 @@ const Calendar: React.FC<ICalendarProps> = ({
             <div
               key={dateKey + index}
               className={`
-                h-24 p-2 border-r border-b border-gray-100 cursor-pointer
+                h-24 p-[1px] border-r border-b border-gray-100 cursor-pointer
                 transition-colors
-                ${!isCurrentMonth ? "bg-gray-50 text-gray-400" : "bg-white"}
-                ${isToday ? "bg-blue-50 border-blue-200" : ""}
                 ${
                   selectedDate === dateKey
                     ? "bg-blue-100 hover:bg-blue-100"
-                    : "hover:bg-gray-50"
+                    : "bg-white hover:bg-gray-50"
                 }
+                ${!isCurrentMonth ? "!bg-gray-50" : ""}
               `}
               onClick={() => handleDateClick(dateKey)}
             >
@@ -158,7 +159,7 @@ const Calendar: React.FC<ICalendarProps> = ({
                 {/* 날짜 */}
                 <div
                   className={`
-                    text-sm font-medium mb-1
+                    text-sm font-medium mb-1 text-center
                     ${isToday ? "text-blue-600" : defaultFontColor}
                   `}
                 >
@@ -169,12 +170,12 @@ const Calendar: React.FC<ICalendarProps> = ({
                 {summary && isCurrentMonth && (
                   <div className="flex-1 space-y-1">
                     {summary.totalIncome > 0 && (
-                      <div className="text-xs text-green-600 font-medium">
+                      <div className="text-green-600 font-medium text-[clamp(6px,5vw,12px)] text-center">
                         {summary.totalIncome}
                       </div>
                     )}
                     {summary.totalExpense > 0 && (
-                      <div className="text-xs text-red-600 font-medium">
+                      <div className="text-xs text-red-600 font-medium text-[clamp(6px,5vw,12px)] text-center">
                         {summary.totalExpense}
                       </div>
                     )}
